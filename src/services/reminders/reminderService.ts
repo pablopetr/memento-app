@@ -1,6 +1,5 @@
 import {apiClient} from '../api/client';
 import {endpoints} from '../api/endpoints';
-import {Paginated} from '../../types/api';
 import {
   CreateReminderInput,
   Reminder,
@@ -8,15 +7,23 @@ import {
 } from '../../types/reminder';
 
 /**
+ * A single cursor-paginated page of results. `nextCursor` is null when there
+ * are no more pages (drives `getNextPageParam` in the infinite query).
+ */
+export interface Page<T> {
+  items: T[];
+  nextCursor: string | null;
+}
+
+/**
  * CRUD calls for reminders. Pure networking logic — pagination, retries and
  * caching are handled by the TanStack Query hooks that consume this
  * (see docs/03-dashboard-screen.md and docs/04-reminder-screens.md).
  */
-export async function listReminders(page = 1, pageSize = 20) {
-  const {data} = await apiClient.get<Paginated<Reminder>>(
-    endpoints.reminders.list,
-    {params: {page, pageSize}},
-  );
+export async function fetchReminders(cursor?: string): Promise<Page<Reminder>> {
+  const {data} = await apiClient.get<Page<Reminder>>(endpoints.reminders.list, {
+    params: {cursor, limit: 20},
+  });
   return data;
 }
 
