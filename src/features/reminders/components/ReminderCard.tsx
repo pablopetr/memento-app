@@ -21,9 +21,7 @@ function ReminderCardComponent({reminder, onPress}: ReminderCardProps) {
       onPress={() => onPress(reminder.id)}
       style={({pressed}) => [styles.card, pressed && styles.pressed]}>
       <View style={styles.body}>
-        <Text
-          numberOfLines={1}
-          style={[styles.title, reminder.completed && styles.completed]}>
+        <Text numberOfLines={1} style={styles.title}>
           {reminder.title}
         </Text>
         <Text style={styles.time}>{formatReminderTime(reminder.remindAt)}</Text>
@@ -50,7 +48,6 @@ const styles = StyleSheet.create({
   pressed: {opacity: 0.7},
   body: {flex: 1, gap: 4},
   title: {fontSize: 16, fontWeight: '600', color: '#111827'},
-  completed: {textDecorationLine: 'line-through', color: '#9ca3af'},
   time: {fontSize: 13, color: '#6b7280'},
   chevron: {fontSize: 24, color: '#9ca3af', marginLeft: 8},
 });

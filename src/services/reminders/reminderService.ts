@@ -1,10 +1,6 @@
 import {apiClient} from '../api/client';
 import {endpoints} from '../api/endpoints';
-import {
-  CreateReminderInput,
-  Reminder,
-  UpdateReminderInput,
-} from '../../types/reminder';
+import {Reminder, ReminderInput} from '../../types/reminder';
 
 /**
  * A single cursor-paginated page of results. `nextCursor` is null when there
@@ -16,8 +12,16 @@ export interface Page<T> {
 }
 
 /**
- * CRUD calls for reminders. Pure networking logic — pagination, retries and
- * caching are handled by the TanStack Query hooks that consume this
+ * Convert the form's `Date` into an ISO-8601 UTC string before sending. The
+ * server owns scheduling; the client only states the desired time in UTC.
+ */
+function serialize(input: ReminderInput) {
+  return {...input, remindAt: input.remindAt.toISOString()};
+}
+
+/**
+ * CRUD calls for reminders. Pure networking logic — pagination, caching and
+ * optimistic updates are handled by the TanStack Query hooks that consume this
  * (see docs/03-dashboard-screen.md and docs/04-reminder-screens.md).
  */
 export async function fetchReminders(cursor?: string): Promise<Page<Reminder>> {
@@ -32,18 +36,18 @@ export async function getReminder(id: string) {
   return data;
 }
 
-export async function createReminder(input: CreateReminderInput) {
+export async function createReminder(input: ReminderInput) {
   const {data} = await apiClient.post<Reminder>(
     endpoints.reminders.list,
-    input,
+    serialize(input),
   );
   return data;
 }
 
-export async function updateReminder(id: string, input: UpdateReminderInput) {
-  const {data} = await apiClient.patch<Reminder>(
+export async function updateReminder(id: string, input: ReminderInput) {
+  const {data} = await apiClient.put<Reminder>(
     endpoints.reminders.detail(id),
-    input,
+    serialize(input),
   );
   return data;
 }

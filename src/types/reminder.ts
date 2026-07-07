@@ -1,24 +1,31 @@
+/** How often a reminder repeats. */
+export type RepeatInterval = 'none' | 'daily' | 'weekly' | 'monthly';
+
 /**
- * Domain model for a reminder. Mirrors the backend contract documented in
- * docs/05-backend-integration.md — adjust field names to your actual API.
+ * Domain model for a reminder as returned by the backend. Mirrors the contract
+ * in docs/04-reminder-screens.md / docs/05-backend-integration.md — the server
+ * owns scheduling, so `remindAt` is an ISO-8601 UTC timestamp.
  */
 export interface Reminder {
   id: string;
   title: string;
-  body?: string;
-  /** ISO-8601 timestamp of when the reminder should fire. */
+  notes?: string;
+  /** ISO-8601 (UTC) time the reminder should fire. */
   remindAt: string;
-  completed: boolean;
+  repeat: RepeatInterval;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateReminderInput {
+/**
+ * User-supplied reminder data before it hits the network. `remindAt` is a
+ * `Date` here (picker output); the service serializes it to ISO UTC. Defined in
+ * the types layer so services depend only on types, never on feature code —
+ * the form's `ReminderForm` structurally satisfies this shape.
+ */
+export interface ReminderInput {
   title: string;
-  body?: string;
-  remindAt: string;
+  notes?: string;
+  remindAt: Date;
+  repeat: RepeatInterval;
 }
-
-export type UpdateReminderInput = Partial<CreateReminderInput> & {
-  completed?: boolean;
-};
