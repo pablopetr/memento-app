@@ -1,3 +1,7 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json"
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest"]
+  },
+  "exclude": ["e2e", "jest.setup.ts", "node_modules", "__tests__"]
 }

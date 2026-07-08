@@ -1,0 +1,6 @@
+{
+  "testRunner": "jest",
+  "testRunnerConfig": {
+    "testTimeout": 120000
+  }
+}
