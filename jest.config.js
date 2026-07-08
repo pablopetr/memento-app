@@ -9,7 +9,5 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
   ],
-  testMatch: [
-    '**/__tests__/**/*.test.{ts,tsx}',
-  ],
+  testMatch: ['**/__tests__/**/*.test.{ts,tsx}'],
 };
