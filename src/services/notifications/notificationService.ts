@@ -12,6 +12,7 @@ export async function ensureDefaultChannel(): Promise<string> {
     id: DEFAULT_CHANNEL_ID,
     name: 'Reminders',
     importance: AndroidImportance.HIGH,
+    sound: 'default',
   });
 }
 
