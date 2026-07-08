@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 
 import {setSessionExpiredCallback} from '../../services/api/client';
+import {initPushForUser} from '../../services/notifications/fcmService';
 import * as authService from '../../services/auth/authService';
 import {LoginCredentials} from '../../services/auth/authService';
 import {User} from '../../types/user';
@@ -70,6 +71,9 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   const signIn = useCallback(async (credentials: LoginCredentials) => {
     const signedIn = await authService.login(credentials);
     setUser(signedIn);
+    // Request notification permission and register device token now that
+    // the user is authenticated.
+    await initPushForUser();
   }, []);
 
   const value = useMemo<AuthState>(
