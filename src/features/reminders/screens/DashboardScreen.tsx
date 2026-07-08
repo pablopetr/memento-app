@@ -24,6 +24,16 @@ import {useReminders} from '../hooks/useReminders';
 type Props = NativeStackScreenProps<MainStackParamList, 'Dashboard'>;
 
 const keyExtractor = (reminder: Reminder) => reminder.id;
+const CARD_HEIGHT = 88; // padding + title + time + gap + margin (px)
+
+const getItemLayout = (
+  _: ArrayLike<Reminder> | null | undefined,
+  index: number,
+) => ({
+  length: CARD_HEIGHT,
+  offset: CARD_HEIGHT * index,
+  index,
+});
 
 /** Header action; self-contained so it stays a stable component reference. */
 function HeaderLogoutButton() {
@@ -102,6 +112,11 @@ export function DashboardScreen({navigation}: Props) {
         data={reminders}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        getItemLayout={getItemLayout}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={7}
+        removeClippedSubviews
         contentContainerStyle={[
           styles.listContent,
           {paddingBottom: 96 + insets.bottom},

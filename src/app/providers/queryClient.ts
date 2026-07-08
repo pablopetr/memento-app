@@ -6,6 +6,8 @@ import {ApiError} from '../../types/api';
  * Single QueryClient for the app. Error-aware retry: retry on transient
  * network/timeout errors (up to 2 times), but not on auth/validation/server
  * errors since retrying won't help. Fresh data expires after 30 seconds.
+ * staleTime keeps cached reminders fresh for quick navigation back to the
+ * dashboard without a full refetch, improving perceived performance.
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
