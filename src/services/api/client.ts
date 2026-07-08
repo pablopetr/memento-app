@@ -19,7 +19,7 @@ export const apiClient: AxiosInstance = axios.create({
 /** Callback invoked when the session expires (401 + refresh fails). Set by AuthContext. */
 let onSessionExpired: (() => void) | null = null;
 
-export function setSessionExpiredCallback(callback: () => void) {
+export function setSessionExpiredCallback(callback: (() => void) | null) {
   onSessionExpired = callback;
 }
 
@@ -33,6 +33,7 @@ apiClient.interceptors.request.use(async config => {
 });
 
 // Response: refresh on 401 once, else normalize error.
+// Deduplicate concurrent token refresh requests by sharing the promise.
 let refreshing: Promise<string | null> | null = null;
 
 apiClient.interceptors.response.use(
@@ -46,17 +47,23 @@ apiClient.interceptors.response.use(
       original.method !== 'post' // don't retry login/refresh attempts
     ) {
       original._retry = true;
-      // Deduplicate refresh requests: share the same promise across concurrent 401s.
-      refreshing ??= refreshAccessToken();
-      const newToken = await refreshing;
-      refreshing = null;
-      if (newToken) {
-        original.headers.Authorization = `Bearer ${newToken}`;
-        return apiClient(original);
-      }
-      // Refresh failed: session expired.
-      if (onSessionExpired) {
-        onSessionExpired();
+      try {
+        // Deduplicate: all concurrent 401s share the same refresh promise.
+        if (!refreshing) {
+          refreshing = refreshAccessToken();
+        }
+        const newToken = await refreshing;
+        if (newToken) {
+          original.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(original);
+        }
+        // Refresh failed: session expired.
+        if (onSessionExpired) {
+          onSessionExpired();
+        }
+      } finally {
+        // Only clear after this request's retry is complete.
+        refreshing = null;
       }
     }
     return Promise.reject(toApiError(error));

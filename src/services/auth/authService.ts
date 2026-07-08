@@ -47,6 +47,9 @@ export async function logout(): Promise<void> {
  * Refresh the access token using the stored refresh token. Called by the
  * response interceptor on 401 to transparently retry. Returns the new access
  * token on success or null on failure (session expired).
+ *
+ * Uses a shorter timeout (5s) than the default (15s) since refresh is critical
+ * for session continuity and should fail fast if the server is slow.
  */
 export async function refreshAccessToken(): Promise<string | null> {
   try {
@@ -57,6 +60,7 @@ export async function refreshAccessToken(): Promise<string | null> {
     const {data} = await apiClient.post<RefreshResponse>(
       endpoints.auth.refresh,
       {refreshToken: tokens.refreshToken},
+      {timeout: 5000}, // Fail fast on token refresh
     );
     await saveTokens({
       accessToken: data.accessToken,

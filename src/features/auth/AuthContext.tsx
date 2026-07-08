@@ -64,8 +64,9 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     setUser(null);
   }, []);
 
+  // Register session expiration callback on mount (signOut is stable).
   useEffect(() => {
-    setSessionExpiredCallback(() => signOut());
+    setSessionExpiredCallback(signOut);
   }, [signOut]);
 
   const signIn = useCallback(async (credentials: LoginCredentials) => {
