@@ -1,7 +1,7 @@
 import {apiClient} from '../api/client';
 import {endpoints} from '../api/endpoints';
 import {User} from '../../types/user';
-import {clearTokens, getAccessToken, saveTokens} from './tokenStore';
+import {clearTokens, getAccessToken, getTokens, saveTokens} from './tokenStore';
 
 /**
  * Owns the authentication lifecycle: exchanging credentials for tokens,
@@ -22,6 +22,11 @@ interface LoginResponse {
   user: User;
 }
 
+interface RefreshResponse {
+  accessToken: string;
+  refreshToken?: string;
+}
+
 export async function login(credentials: LoginCredentials): Promise<User> {
   const {data} = await apiClient.post<LoginResponse>(
     endpoints.auth.login,
@@ -36,6 +41,31 @@ export async function login(credentials: LoginCredentials): Promise<User> {
 
 export async function logout(): Promise<void> {
   await clearTokens();
+}
+
+/**
+ * Refresh the access token using the stored refresh token. Called by the
+ * response interceptor on 401 to transparently retry. Returns the new access
+ * token on success or null on failure (session expired).
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const tokens = await getTokens();
+    if (!tokens?.refreshToken) {
+      return null;
+    }
+    const {data} = await apiClient.post<RefreshResponse>(
+      endpoints.auth.refresh,
+      {refreshToken: tokens.refreshToken},
+    );
+    await saveTokens({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    });
+    return data.accessToken;
+  } catch {
+    return null;
+  }
 }
 
 /** True when a token is present — used on boot to pick the initial stack. */

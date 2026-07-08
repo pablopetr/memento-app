@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 
+import {setSessionExpiredCallback} from '../../services/api/client';
 import * as authService from '../../services/auth/authService';
 import {LoginCredentials} from '../../services/auth/authService';
 import {User} from '../../types/user';
@@ -33,7 +34,9 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<User | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
 
-  // On boot, decide whether a valid session already exists.
+  // On boot, decide whether a valid session already exists and set the
+  // session-expired callback so the API client can log the user out if the
+  // token refresh fails.
   useEffect(() => {
     let active = true;
     authService
@@ -54,14 +57,19 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     };
   }, []);
 
-  const signIn = useCallback(async (credentials: LoginCredentials) => {
-    const signedIn = await authService.login(credentials);
-    setUser(signedIn);
-  }, []);
-
+  // Set the callback so the API client can log out when the session expires.
   const signOut = useCallback(async () => {
     await authService.logout();
     setUser(null);
+  }, []);
+
+  useEffect(() => {
+    setSessionExpiredCallback(() => signOut());
+  }, [signOut]);
+
+  const signIn = useCallback(async (credentials: LoginCredentials) => {
+    const signedIn = await authService.login(credentials);
+    setUser(signedIn);
   }, []);
 
   const value = useMemo<AuthState>(
